@@ -2,18 +2,38 @@
 
 Thank you for reviewing **Glowcity**, a smart civic complaint platform. Citizens report infrastructure issues (street lights, potholes, etc.); admins review complaints, update status, and view analytics.
 
-**Replace all placeholders** in angle brackets (e.g. `<YOUR_LIVE_URL>`) before sharing this file with organizers.
-
 ---
 
 ## Quick links
 
 | Item | Value |
 |------|--------|
-| **Live demo** | `<YOUR_LIVE_URL>` (e.g. `https://glowcity.onrender.com`) |
-| **GitHub repository** | `<YOUR_GITHUB_REPO_URL>` (e.g. `https://github.com/YOUR_USERNAME/Glowcity`) |
-| **Admin username** | `<ADMIN_USERNAME>` (default on Render: `admin`) |
-| **Admin password** | `<ADMIN_PASSWORD>` *(share privately with organizers, not in public README)* |
+| **Live demo** | `https://glowcity-uygw.onrender.com` |
+| **GitHub repository** | `https://github.com/krisha-kalal/Glowcity` |
+| **Admin username** | `admin` (default on Render: `admin`) |
+| **Admin password** | `HackathonAdmin2026` *(public for hackathon judging)* |
+
+---
+
+## How judges find you (you do not email judges directly)
+
+Hackathons almost never give you a list of judge emails. **Judges come to your project** through what you submit on the hackathon platform (Devpost, HackerEarth, your school portal, etc.).
+
+**What to paste into your submission form:**
+
+1. **Project title** — Glowcity / GlowGuardian  
+2. **Live demo URL** — `https://glowcity-uygw.onrender.com`  
+3. **GitHub repo** — `https://github.com/krisha-kalal/Glowcity`  
+4. **Judge guide** — `https://github.com/krisha-kalal/Glowcity/blob/main/JUDGES.md`  
+5. **Admin login** — username `admin`, password `HackathonAdmin2026`  
+6. **Short description** — what problem you solve and what the app does (2–3 sentences)  
+7. **Team contact** — `krishakalal2713@gmail.com` (if the form asks)
+
+Judges open your links from the submission dashboard. You do **not** need to message judges before they review.
+
+**Discord / Slack:** use the hackathon’s official help channel (e.g. `#questions`), not private messages to judges.
+
+**Your email** is so judges or organizers can reach **you** if something breaks — many judges never email and only score from your demo and repo.
 
 ---
 
@@ -39,12 +59,12 @@ Best for a quick walkthrough. No Python or Git required.
 
 ### Open the site
 
-1. Go to: **<YOUR_LIVE_URL>**
+1. Go to: **https://glowcity-uygw.onrender.com**
 2. If the page is slow or times out, wait up to **60 seconds** and refresh (free tier wake-up).
 
 ### Citizen flow (report a complaint)
 
-1. Open **<YOUR_LIVE_URL>/login**
+1. Open **https://glowcity-uygw.onrender.com/login**
 2. Click **Continue as Citizen**
 3. **Sign up** (email + password) or **Sign in with Google** (if enabled)
 4. From the citizen dashboard, **file a new complaint**:
@@ -54,11 +74,11 @@ Best for a quick walkthrough. No Python or Git required.
 
 ### Admin flow (manage complaints)
 
-1. Open **<YOUR_LIVE_URL>/login** → **Continue as Admin**  
-   Or go directly to **<YOUR_LIVE_URL>/admin**
+1. Open **https://glowcity-uygw.onrender.com/login** → **Continue as Admin**  
+   Or go directly to **https://glowcity-uygw.onrender.com/admin**
 2. Sign in:
-   - **Username:** `<ADMIN_USERNAME>`
-   - **Password:** `<ADMIN_PASSWORD>`
+   - **Username:** `admin`
+   - **Password:** `HackathonAdmin2026`
 3. On the **dashboard** you can:
    - View all complaints
    - Change status: **Pending** → **In Progress** → **Resolved**
@@ -90,7 +110,7 @@ Use this if you want **AI photo validation**, offline development, or persistent
 ### Steps (Windows PowerShell)
 
 ```powershell
-git clone <YOUR_GITHUB_REPO_URL>
+git clone https://github.com/krisha-kalal/Glowcity
 cd Glowcity
 
 copy .env.example .env
@@ -207,9 +227,13 @@ The repo includes `render.yaml` for [Render](https://render.com) (free tier).
 
 ## Contact / team
 
-- **Team name:** `<YOUR_TEAM_NAME>`
-- **Contact:** `<YOUR_EMAIL_OR_DISCORD>`
+If the demo does not work, judges or organizers can reach us:
+
+- **Team name:** GlowGuardian  
+- **Email:** krishakalal2713@gmail.com  
+
+We do not contact judges directly; they use the submission links above.
 
 ---
 
-*Hackathon submission — update placeholders before sharing with judges.*
+*Hackathon demo — admin password is public on purpose so judges can test the admin dashboard.*
