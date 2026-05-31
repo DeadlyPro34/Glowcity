@@ -1,0 +1,42 @@
+# Secrets — never commit
+.env
+
+# Virtual environment (~800MB with PyTorch) — recreate locally with pip install -r requirements.txt
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Local database (created on first run)
+database.db
+
+# User uploads (optional — remove this line if you want to ship sample images)
+static/uploads/*
+!static/uploads/.gitkeep
+
+# IDE / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Logs & temp
+*.log
+*.tmp
+
+# Hugging Face / model caches (if stored inside the project)
+.cache/
+models/
+*.bin
+*.safetensors

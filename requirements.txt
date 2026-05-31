@@ -1,0 +1,8 @@
+# Glowcity — full local development (web + AI)
+#   pip install -r requirements.txt
+#   pip install -r requirements-ai.txt   # or use the single file below with AI lines uncommented
+#
+# Render.com deploy uses requirements-render.txt (no PyTorch). See README.md.
+
+-r requirements-render.txt
+-r requirements-ai.txt

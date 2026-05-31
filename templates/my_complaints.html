@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Complaints - Glowcity</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+    {% include 'partials/_navbar.html' %}
+    <main class="page-content">
+        <div class="container">
+            <div class="dashboard-header">
+                <h2>My Complaints</h2>
+                <p>Track the status of issues you have reported.</p>
+            </div>
+            <div class="controls-row">
+                <div class="search-wrapper">
+                    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" id="complaintSearch" class="search-input" placeholder="Search complaints...">
+                </div>
+                <div class="filter-wrapper">
+                    <select id="statusFilter" class="status-select">
+                        <option value="all">All Statuses</option>
+                        <option value="pending">Pending</option>
+                        <option value="in progress">In Progress</option>
+                        <option value="resolved">Resolved</option>
+                    </select>
+                </div>
+            </div>
+            <div class="table-card">
+                {% if complaints %}
+                <div class="table-responsive">
+                    <table class="modern-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Pole ID</th>
+                                <th>Issue Type</th>
+                                <th>Status</th>
+                                <th>Issued On</th>
+                                <th>Last Updated</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for c in complaints %}
+                            <tr data-complaint-id="{{ c.id }}" data-status="{{ c.status }}">
+                                <td><strong>#{{ c.id }}</strong></td>
+                                <td>{{ c.pole_id }}</td>
+                                <td>{{ c.complaint_type }}</td>
+                                <td class="status-cell">
+                                    {% if c.status == "Pending" %}
+                                        <span class="badge badge-pending">Pending</span>
+                                    {% elif c.status == "In Progress" %}
+                                        <span class="badge badge-progress">In Progress</span>
+                                    {% else %}
+                                        <span class="badge badge-resolved">Resolved</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ c.issue_date }}</td>
+                                <td class="updated-cell">{{ c.updated_at or "Not Updated" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="no-data">
+                    <p>No complaints submitted yet.</p>
+                    <a href="/complaint" class="primary-btn">File a Complaint</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+
+    {% include 'partials/_footer.html' %}
+    {% include 'partials/_menu_script.html' %}
+    <script>
+        // Dynamic Filtering Logic (Search + Status)
+        const searchInput = document.getElementById('complaintSearch');
+        const statusFilter = document.getElementById('statusFilter');
+        const tableRows = document.querySelectorAll('.modern-table tbody tr');
+
+        function filterTable() {
+            const query = searchInput.value.toLowerCase();
+            const selectedStatus = statusFilter.value.toLowerCase();
+            
+            tableRows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                const statusBadge = row.querySelector('.badge');
+                const rowStatus = statusBadge ? statusBadge.textContent.toLowerCase().trim() : '';
+                
+                const matchesSearch = text.includes(query);
+                const matchesStatus = selectedStatus === 'all' || rowStatus === selectedStatus;
+                
+                if (matchesSearch && matchesStatus) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        if (searchInput && statusFilter) {
+            searchInput.addEventListener('input', filterTable);
+            statusFilter.addEventListener('change', filterTable);
+        }
+
+        // ---------- Real-time status notifications ----------
+        let lastCheck = "{{ poll_since }}";
+        const toastContainer = document.getElementById('toastContainer');
+        const statusClass = {
+            'Pending': 'badge-pending',
+            'In Progress': 'badge-progress',
+            'Resolved': 'badge-resolved'
+        };
+
+        function showToast(update) {
+            const toast = document.createElement('div');
+            const typeClass = update.status === 'Resolved' ? 'toast-success'
+                : update.status === 'In Progress' ? 'toast-info' : 'toast-warning';
+            toast.className = `toast ${typeClass}`;
+            toast.innerHTML = `
+                <div class="toast-title">Status updated</div>
+                <div class="toast-body">${update.message}</div>
+                <button type="button" class="toast-close" aria-label="Dismiss">&times;</button>
+            `;
+            toastContainer.appendChild(toast);
+            toast.querySelector('.toast-close').addEventListener('click', () => toast.remove());
+            setTimeout(() => {
+                toast.classList.add('toast-hide');
+                setTimeout(() => toast.remove(), 400);
+            }, 6000);
+        }
+
+        function updateTableRow(update) {
+            const row = document.querySelector(`tr[data-complaint-id="${update.id}"]`);
+            if (!row) return;
+            row.dataset.status = update.status;
+            row.classList.add('row-highlight');
+            setTimeout(() => row.classList.remove('row-highlight'), 2500);
+
+            const badge = row.querySelector('.status-cell .badge');
+            if (badge) {
+                badge.className = 'badge ' + (statusClass[update.status] || 'badge-pending');
+                badge.textContent = update.status;
+            }
+            const updatedCell = row.querySelector('.updated-cell');
+            if (updatedCell) updatedCell.textContent = update.updated_at;
+        }
+
+        async function pollStatusUpdates() {
+            try {
+                const res = await fetch(`/api/user/status_updates?since=${encodeURIComponent(lastCheck)}`);
+                if (!res.ok) return;
+                const data = await res.json();
+                if (data.updates && data.updates.length) {
+                    data.updates.forEach(u => {
+                        showToast(u);
+                        updateTableRow(u);
+                    });
+                }
+                if (data.server_time) lastCheck = data.server_time;
+            } catch (err) {
+                console.error('Status poll failed:', err);
+            }
+        }
+
+        pollStatusUpdates();
+        setInterval(pollStatusUpdates, 4000);
+    </script>
+</body>
+</html>

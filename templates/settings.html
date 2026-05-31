@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings | Glowcity</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    {% include 'partials/_navbar.html' %}
+
+    <main class="page-content settings-page">
+        <div class="container">
+            <div class="dashboard-header">
+                <h2>Settings</h2>
+                <p>Your account and complaint activity at a glance.</p>
+            </div>
+
+            <div class="settings-top">
+                <section class="settings-account">
+                    <img
+                        src="https://ui-avatars.com/api/?name={{ avatar_name }}&background=6366f1&color=fff&size=96"
+                        alt=""
+                        class="settings-avatar"
+                        width="96"
+                        height="96"
+                    >
+                    <div class="settings-account-body">
+                        <h3>{{ user_name }}</h3>
+                        <p class="settings-email">{{ user_email }}</p>
+                        <span class="settings-tag">Citizen account</span>
+                    </div>
+                    <div class="settings-quick">
+                        <a href="{{ url_for('complaint') }}" class="primary-btn">File complaint</a>
+                        <a href="{{ url_for('my_complaints') }}" class="secondary-btn settings-btn-outline">My complaints</a>
+                    </div>
+                </section>
+
+                <div class="settings-stats">
+                    <div class="settings-stat-card">
+                        <span class="settings-stat-num">{{ total_filed }}</span>
+                        <span class="settings-stat-label">Total filed</span>
+                    </div>
+                    <div class="settings-stat-card settings-stat-pending">
+                        <span class="settings-stat-num">{{ pending }}</span>
+                        <span class="settings-stat-label">Pending</span>
+                    </div>
+                    <div class="settings-stat-card settings-stat-progress">
+                        <span class="settings-stat-num">{{ in_progress }}</span>
+                        <span class="settings-stat-label">In progress</span>
+                    </div>
+                    <div class="settings-stat-card settings-stat-resolved">
+                        <span class="settings-stat-num">{{ resolved }}</span>
+                        <span class="settings-stat-label">Resolved</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-card settings-table-wrap">
+                <div class="settings-table-head">
+                    <h3>Your recent complaints</h3>
+                    {% if recent_complaints %}
+                    <a href="{{ url_for('my_complaints') }}" class="settings-link">View all →</a>
+                    {% endif %}
+                </div>
+
+                {% if recent_complaints %}
+                <div class="table-responsive">
+                    <table class="modern-table settings-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Pole</th>
+                                <th>Issue</th>
+                                <th>Location</th>
+                                <th>Status</th>
+                                <th>Filed</th>
+                                <th>Updated</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for c in recent_complaints %}
+                            <tr>
+                                <td><strong>#{{ c.id }}</strong></td>
+                                <td>{{ c.pole_id }}</td>
+                                <td>{{ c.complaint_type }}</td>
+                                <td class="settings-loc">{{ c.address or '—' }}</td>
+                                <td class="status-cell">
+                                    {% if c.status == 'Pending' %}
+                                        <span class="badge badge-pending">Pending</span>
+                                    {% elif c.status == 'In Progress' %}
+                                        <span class="badge badge-progress">In Progress</span>
+                                    {% else %}
+                                        <span class="badge badge-resolved">Resolved</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ c.issue_date }}</td>
+                                <td>{{ c.updated_at or '—' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="no-data settings-empty">
+                    <p>You have not filed any complaints yet.</p>
+                    <a href="{{ url_for('complaint') }}" class="primary-btn">Report an issue</a>
+                </div>
+                {% endif %}
+            </div>
+
+            <section class="settings-info">
+                <h4>Account</h4>
+                <ul class="settings-info-list">
+                    <li><span>Name</span><strong>{{ user_name }}</strong></li>
+                    <li><span>Email</span><strong>{{ user_email }}</strong></li>
+                    <li><span>Sign out</span><a href="{{ url_for('user_logout') }}">Log out of Glowcity</a></li>
+                </ul>
+            </section>
+        </div>
+    </main>
+
+    {% include 'partials/_footer.html' %}
+    {% include 'partials/_menu_script.html' %}
+</body>
+</html>

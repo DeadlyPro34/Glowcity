@@ -1,0 +1,9 @@
+# Render.com deployment (free tier) — no PyTorch (too large for 512MB RAM)
+# AI photo check is disabled via ENABLE_AI=false; all other features work.
+
+Flask>=3.1,<4
+Werkzeug>=3.1
+gunicorn>=23.0
+google-auth>=2.48
+Pillow>=12.2
+requests>=2.32

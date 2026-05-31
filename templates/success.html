@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complaint Submitted - Glowcity</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    {% include 'partials/_navbar.html' %}
+
+    <main class="page-content">
+        <div class="container">
+            <div class="auth-box success-box">
+                <div class="success-icon">✅</div>
+                <h2>Complaint Submitted</h2>
+                <p class="auth-subtitle">Thank you for helping improve your city. Your report has been successfully registered.</p>
+                
+                <div class="notification-panel">
+                    <p>You will receive status updates regarding this issue within the "My Complaints" section of this application.</p>
+                </div>
+                
+                <a href="/" class="primary-btn full-width">Go Back Home</a>
+            </div>
+        </div>
+    </main>
+
+    {% include 'partials/_footer.html' %}
+    {% include 'partials/_menu_script.html' %}
+</body>
+</html>

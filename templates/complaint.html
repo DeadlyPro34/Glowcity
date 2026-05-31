@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Complaint - Glowcity</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    {% include 'partials/_navbar.html' %}
+
+    <main class="page-content">
+        <div class="container">
+            {% include 'partials/_flash.html' %}
+
+            <div class="form-card">
+                <div class="form-header">
+                    <h2>Register a Complaint</h2>
+                    <p>Fill out the details below to report an issue with the infrastructure.</p>
+                </div>
+                
+                <form method="POST" enctype="multipart/form-data" class="modern-form">
+                    
+                    <div class="form-group">
+                        <label for="pole_id">Pole ID</label>
+                        <input type="text" name="pole_id" id="pole_id" value="{{ pole_id }}" placeholder="e.g. SP101" required>
+                        <small class="help-text">Auto-detected from QR code</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="complaint_type">Complaint Type</label>
+                        <select name="complaint_type" id="complaint_type" required>
+                            <option value="">-- Select Issue Type --</option>
+                            <option>Street Light Not Working</option>
+                            <option>Pole Damaged</option>
+                            <option>Road Damage</option>
+                            <option>Open Wiring</option>
+                            <option>Water Leakage</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="image">Photo Evidence</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" name="image" id="image" accept="image/*">
+                        </div>
+                        <div id="ai-status" class="ai-status-msg"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea name="description" id="description" rows="4" placeholder="Briefly describe the issue..." required></textarea>
+                    </div>
+
+                    <div class="form-group location-section">
+                        <label>Problem Location</label>
+                        <p class="help-text location-hint">Choose one: enter the address manually, or use your current GPS location.</p>
+
+                        <label class="location-option">
+                            <input type="checkbox" id="useCurrentLocation">
+                            <span>Use my current location</span>
+                        </label>
+
+                        <div id="manualAddressGroup">
+                            <input type="text" name="address" id="address" placeholder="e.g. 123 Main St, near City Park, Block 4">
+                            <small class="help-text">Enter the full address where the problem is, even if you are not there right now.</small>
+                        </div>
+
+                        <div id="gpsStatus" class="gps-status" hidden></div>
+
+                        <input type="hidden" name="location_mode" id="location_mode" value="manual">
+                        <input type="hidden" name="latitude" id="latitude">
+                        <input type="hidden" name="longitude" id="longitude">
+                    </div>
+
+                    <button type="submit" class="primary-btn submit-btn">Submit Complaint</button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    {% include 'partials/_footer.html' %}
+    {% include 'partials/_menu_script.html' %}
+    <script>
+        const useCurrentLocation = document.getElementById('useCurrentLocation');
+        const manualAddressGroup = document.getElementById('manualAddressGroup');
+        const addressInput = document.getElementById('address');
+        const locationMode = document.getElementById('location_mode');
+        const latitudeInput = document.getElementById('latitude');
+        const longitudeInput = document.getElementById('longitude');
+        const gpsStatus = document.getElementById('gpsStatus');
+        const complaintForm = document.querySelector('.modern-form');
+
+        function setGpsStatus(message, type) {
+            gpsStatus.hidden = false;
+            gpsStatus.textContent = message;
+            gpsStatus.className = 'gps-status ' + (type || '');
+        }
+
+        function clearGpsCoords() {
+            latitudeInput.value = '';
+            longitudeInput.value = '';
+        }
+
+        function enableManualMode() {
+            locationMode.value = 'manual';
+            manualAddressGroup.hidden = false;
+            addressInput.disabled = false;
+            addressInput.required = true;
+            gpsStatus.hidden = true;
+            clearGpsCoords();
+        }
+
+        function enableGpsMode() {
+            locationMode.value = 'gps';
+            manualAddressGroup.hidden = true;
+            addressInput.value = '';
+            addressInput.disabled = true;
+            addressInput.required = false;
+        }
+
+        function fetchCurrentLocation() {
+            if (!navigator.geolocation) {
+                setGpsStatus('Geolocation is not supported on this device. Please enter the address manually.', 'error');
+                useCurrentLocation.checked = false;
+                enableManualMode();
+                return;
+            }
+
+            setGpsStatus('Detecting your location...', 'loading');
+
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    latitudeInput.value = position.coords.latitude;
+                    longitudeInput.value = position.coords.longitude;
+                    setGpsStatus(
+                        'Location captured: ' + position.coords.latitude.toFixed(5) + ', ' + position.coords.longitude.toFixed(5),
+                        'success'
+                    );
+                },
+                function() {
+                    setGpsStatus('Could not access your location. Please allow permission or enter the address manually.', 'error');
+                    useCurrentLocation.checked = false;
+                    enableManualMode();
+                },
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+            );
+        }
+
+        useCurrentLocation.addEventListener('change', function() {
+            if (this.checked) {
+                enableGpsMode();
+                fetchCurrentLocation();
+            } else {
+                enableManualMode();
+            }
+        });
+
+        complaintForm.addEventListener('submit', function(e) {
+            if (locationMode.value === 'gps') {
+                if (!latitudeInput.value || !longitudeInput.value) {
+                    e.preventDefault();
+                    setGpsStatus('Waiting for location. Please allow access or uncheck "Use my current location" and enter an address.', 'error');
+                    return;
+                }
+            } else if (!addressInput.value.trim()) {
+                e.preventDefault();
+                addressInput.focus();
+                return;
+            }
+        });
+
+        enableManualMode();
+
+        // Image Validation AJAX
+        const imageInput = document.getElementById('image');
+        const aiStatus = document.getElementById('ai-status');
+        const submitBtn = document.querySelector('.submit-btn');
+
+        imageInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (!file) return;
+
+            // Clear previous status
+            aiStatus.innerHTML = 'AI is validating your photo evidence...';
+            aiStatus.className = 'ai-status-msg loading';
+            submitBtn.disabled = true;
+            submitBtn.style.opacity = '0.7';
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            fetch('/validate_image', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    aiStatus.innerHTML = '<strong>Success!</strong> ' + data.label + ' detected (' + (data.score * 100).toFixed(0) + '% confidence)';
+                    aiStatus.className = 'ai-status-msg success';
+                    submitBtn.disabled = false;
+                    submitBtn.style.opacity = '1';
+                } else {
+                    aiStatus.innerHTML = '<strong>Failed:</strong> ' + data.message;
+                    aiStatus.className = 'ai-status-msg error';
+                    imageInput.value = ''; // Clear the file input
+                    submitBtn.disabled = false;
+                    submitBtn.style.opacity = '1';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                aiStatus.innerHTML = '⚠️ AI validation skipped due to connection issue.';
+                aiStatus.className = 'ai-status-msg warning';
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
+            });
+        });
+
+    </script>
+</body>
+</html>

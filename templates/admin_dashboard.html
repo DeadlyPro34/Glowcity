@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Glowcity</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+</head>
+<body>
+
+    {% include 'partials/_navbar.html' %}
+
+    <main class="page-content">
+        <div class="container">
+            {% include 'partials/_flash.html' %}
+
+            <div class="dashboard-header">
+                <h2>Admin Dashboard</h2>
+                <p>Overview of infrastructure complaints and system status.</p>
+                <div class="logout-wrapper">
+                    <a href="{{ url_for('admin_logout') }}" class="logout-link">Logout Admin</a>
+                </div>
+            </div>
+
+            <div class="controls-row">
+                <div class="search-wrapper">
+                    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" id="adminSearch" class="search-input" placeholder="Search all complaints...">
+                </div>
+
+                <div class="filter-wrapper">
+                    <select id="statusFilter" class="status-select">
+                        <option value="all">All Statuses</option>
+                        <option value="pending">Pending</option>
+                        <option value="in progress">In Progress</option>
+                        <option value="resolved">Resolved</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card total-card">
+                    <h3>Total Complaints</h3>
+                    <p class="stat-number" id="stat-total">{{ total }}</p>
+                </div>
+                <div class="stat-card pending-card">
+                    <h3>Pending</h3>
+                    <p class="stat-number" id="stat-pending">{{ pending }}</p>
+                </div>
+                <div class="stat-card progress-card">
+                    <h3>In Progress</h3>
+                    <p class="stat-number" id="stat-progress">{{ progress }}</p>
+                </div>
+                <div class="stat-card resolved-card">
+                    <h3>Resolved</h3>
+                    <p class="stat-number" id="stat-resolved">{{ resolved }}</p>
+                </div>
+            </div>
+
+            <section class="analytics-section">
+                <div class="analytics-toolbar">
+                    <div>
+                        <h3 class="analytics-title">Live Analytics</h3>
+                        <p class="analytics-subtitle">Real-time civic operations overview</p>
+                    </div>
+                    <div class="analytics-toolbar-right">
+                        <span class="live-badge"><span class="live-dot"></span> LIVE</span>
+                        <span class="last-updated" id="lastUpdated">Syncing...</span>
+                    </div>
+                </div>
+
+                <div class="live-metrics-row">
+                    <div class="live-metric-card">
+                        <span class="live-metric-label">Reports Today</span>
+                        <span class="live-metric-value" id="metric-reports-today">—</span>
+                    </div>
+                    <div class="live-metric-card">
+                        <span class="live-metric-label">Avg Resolution</span>
+                        <span class="live-metric-value" id="metric-avg-resolution">—</span>
+                    </div>
+                    <div class="live-metric-card">
+                        <span class="live-metric-label">Resolution Rate</span>
+                        <span class="live-metric-value" id="metric-resolution-rate">—</span>
+                    </div>
+                    <div class="live-metric-card telemetry">
+                        <span class="live-metric-label">Field Teams Active</span>
+                        <span class="live-metric-value" id="metric-field-teams">—</span>
+                    </div>
+                    <div class="live-metric-card telemetry">
+                        <span class="live-metric-label">Response Index</span>
+                        <span class="live-metric-value" id="metric-response-index">—</span>
+                    </div>
+                </div>
+
+                <div class="analytics-grid">
+                    <div class="chart-card">
+                        <h4>Complaints by Type</h4>
+                        <div class="chart-wrap">
+                            <canvas id="typeChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <h4>Status Breakdown</h4>
+                        <div class="chart-wrap chart-wrap-pie">
+                            <canvas id="statusChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card chart-card-map">
+                        <h4>Complaint Heatmap</h4>
+                        <div id="admin-heatmap" class="admin-heatmap-map"></div>
+                        <div class="heatmap-legend">
+                            <span><i class="heat-dot high"></i> High density</span>
+                            <span><i class="heat-dot low"></i> Low density</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <div class="table-card">
+                <h3 class="table-title">Recent Complaints</h3>
+                <div class="table-responsive">
+                    <table class="modern-table admin-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Pole ID</th>
+                                <th>Issue Type</th>
+                                <th>Image</th>
+                                <th>Description</th>
+                                <th>Location</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                                <th>Issued On</th>
+                                <th>Last Updated</th> </tr>
+                        </thead>
+                        <tbody>
+                            {% for c in complaints %}
+                            <tr>
+                                <td><strong>#{{ c.id }}</strong></td>
+                                <td>{{ c.pole_id }}</td>
+                                <td>{{ c.complaint_type }}</td>
+                                <td>
+                                    {% if c.image %}
+                                        <a href="{{ url_for('static', filename='uploads/' + c.image) }}" target="_blank">
+                                            <img src="{{ url_for('static', filename='uploads/' + c.image) }}" 
+                                                 alt="Evidence" class="table-img">
+                                        </a>
+                                    {% else %}
+                                        <span class="no-image">No Image</span>
+                                    {% endif %}
+                                </td>
+                                <td class="desc-cell">
+                                    <span title="{{ c.description }}">{{ c.description }}</span>
+                                </td>
+                                <td>
+                                    {% if c.latitude and c.longitude %}
+                                        <a href="https://maps.google.com/?q={{ c.latitude }},{{ c.longitude }}" target="_blank" class="map-link">
+                                            View Map
+                                        </a>
+                                    {% elif c.address %}
+                                        <a href="https://maps.google.com/?q={{ c.address | urlencode }}" target="_blank" class="map-link">
+                                            View Map
+                                        </a>
+                                        <div class="location-address">{{ c.address }}</div>
+                                    {% else %}
+                                        <span class="no-image">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if c.status == "Pending" %}
+                                        <span class="badge badge-pending">Pending</span>
+                                    {% elif c.status == "In Progress" %}
+                                        <span class="badge badge-progress">In Progress</span>
+                                    {% elif c.status == "Resolved" %}
+                                        <span class="badge badge-resolved">Resolved</span>
+                                    {% endif %}
+                                </td>
+                                <td class="action-cell">
+                                    <a href="{{ url_for('update_status', id=c.id, new_status='In Progress') }}" class="btn-action progress-btn">In Progress</a>
+                                    <a href="{{ url_for('update_status', id=c.id, new_status='Resolved') }}" class="btn-action resolve-btn">Resolve</a>
+                                </td>
+                                <td>{{ c.issue_date }}</td>
+                                <td>{{ c.updated_at or "Not Updated" }}</td> </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container footer-container">
+            <div class="footer-brand">
+                <a href="/" class="logo">Glowcity<span class="dot">.</span></a>
+                <p>Empowering citizens to monitor and maintain smart infrastructure.</p>
+            </div>
+            
+            <div class="footer-links">
+                <h4>Quick Links</h4>
+                <a href="/">Home</a>
+                <a href="/#about">About Us</a>
+            </div>
+            
+            <div class="footer-contact">
+                <h4>Contact</h4>
+                <p>support@glowcity.com</p>
+                <p>+1 (800) 123-4567</p>
+                <p class="copyright">© 2026 Glowcity Inc.</p>
+            </div>
+
+            <div class="footer-social">
+                <h4>Follow Us</h4><div class="footer-social-icons">
+                <a href="#"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><path fill="currentColor" d="M9.294 6.928L14.357 1h-1.2L8.762 6.147L5.25 1H1.2l5.31 7.784L1.2 15h1.2l4.642-5.436L10.751 15h4.05zM7.651 8.852l-.538-.775L2.832 1.91h1.843l3.454 4.977l.538.775l4.491 6.47h-1.843z"/></svg></a>
+                <a href="#"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="-2 -2 24 24"><g fill="currentColor"><path d="M14.017 0h-8.07A5.954 5.954 0 0 0 0 5.948v8.07a5.954 5.954 0 0 0 5.948 5.947h8.07a5.954 5.954 0 0 0 5.947-5.948v-8.07A5.954 5.954 0 0 0 14.017 0m3.94 14.017a3.94 3.94 0 0 1-3.94 3.94h-8.07a3.94 3.94 0 0 1-3.939-3.94v-8.07a3.94 3.94 0 0 1 3.94-3.939h8.07a3.94 3.94 0 0 1 3.939 3.94v8.07z"/><path d="M9.982 4.819A5.17 5.17 0 0 0 4.82 9.982a5.17 5.17 0 0 0 5.163 5.164a5.17 5.17 0 0 0 5.164-5.164A5.17 5.17 0 0 0 9.982 4.82zm0 8.319a3.155 3.155 0 1 1 0-6.31a3.155 3.155 0 0 1 0 6.31"/><circle cx="15.156" cy="4.858" r="1.237"/></g></svg></a>
+                <a href="#"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><path fill="currentColor" fill-rule="evenodd" d="M3.11 15c-.559 0-1.09-.222-1.49-.617s-.617-.931-.617-1.49v-9.79c0-.559.222-1.09.617-1.49S2.551.996 3.11.996h9.79c.559 0 1.09.222 1.49.617s.617.931.617 1.49v9.79c0 .559-.222 1.09-.617 1.49S13.459 15 12.9 15zm8.55-5.91h-1.48v4.89h2.72a1.084 1.084 0 0 0 1.087-1.087v-9.79A1.086 1.086 0 0 0 12.9 2.016H3.11a1.09 1.09 0 0 0-1.087 1.087v9.79A1.09 1.09 0 0 0 3.11 13.98h5.44V9.09H6.92V7.46h1.63v-.876c0-1.66.808-2.39 2.19-2.39c.647 0 .995.047 1.16.07l.01.001v1.56h-.94c-.474 0-.698.203-.766.612a2 2 0 0 0-.023.322v.697h1.71l-.233 1.63z" clip-rule="evenodd"/></svg></a>
+                <a href="#"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><g fill="none"><g clip-path="url(#SVGXv8lpc2Y)"><path fill="currentColor" d="M23.5 6.507a2.8 2.8 0 0 0-.766-1.27a3.05 3.05 0 0 0-1.338-.742C19.518 4 11.994 4 11.994 4a77 77 0 0 0-9.39.47a3.16 3.16 0 0 0-1.338.76c-.37.356-.638.795-.778 1.276A29 29 0 0 0 0 12c-.012 1.841.151 3.68.488 5.494c.137.479.404.916.775 1.269s.833.608 1.341.743c1.903.494 9.39.494 9.39.494a77 77 0 0 0 9.402-.47a3.05 3.05 0 0 0 1.338-.742a2.8 2.8 0 0 0 .765-1.27A28.4 28.4 0 0 0 24 12.023a26.6 26.6 0 0 0-.5-5.517M9.602 15.424V8.577l6.26 3.424z"/></g><defs><clipPath id="SVGXv8lpc2Y"><path fill="#fff" d="M0 0h24v24H0z"/></clipPath></defs></g></svg></a>
+            </div></div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    <script>
+        // Mobile Menu Script
+        const menuToggle = document.getElementById('menu-toggle');
+        const navLinks = document.querySelector('.nav-links');
+
+        menuToggle.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+            menuToggle.classList.toggle('open');
+        });
+
+        // Admin Dynamic Filtering Logic (Search + Status)
+        const adminSearch = document.getElementById('adminSearch');
+        const statusFilter = document.getElementById('statusFilter');
+        const adminRows = document.querySelectorAll('.admin-table tbody tr');
+
+        function filterAdminTable() {
+            const query = adminSearch.value.toLowerCase();
+            const selectedStatus = statusFilter.value.toLowerCase();
+            
+            adminRows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                const statusBadge = row.querySelector('.badge');
+                const rowStatus = statusBadge ? statusBadge.textContent.toLowerCase().trim() : '';
+                
+                const matchesSearch = text.includes(query);
+                const matchesStatus = selectedStatus === 'all' || rowStatus === selectedStatus;
+                
+                if (matchesSearch && matchesStatus) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        if (adminSearch && statusFilter) {
+            adminSearch.addEventListener('input', filterAdminTable);
+            statusFilter.addEventListener('change', filterAdminTable);
+        }
+
+        // ---------- Live Analytics ----------
+        const CHART_COLORS = ['#6366f1', '#ec4899', '#f97316', '#22c55e', '#0ea5e9', '#a855f7', '#eab308'];
+        const STATUS_COLORS = { 'Pending': '#ef4444', 'In Progress': '#f97316', 'Resolved': '#22c55e' };
+
+        let typeChart = null;
+        let statusChart = null;
+        let heatmapMap = null;
+        let heatLayer = null;
+
+        function initHeatmapMap() {
+            if (heatmapMap) return;
+            heatmapMap = L.map('admin-heatmap', { scrollWheelZoom: false }).setView([20.5937, 78.9629], 5);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap'
+            }).addTo(heatmapMap);
+        }
+
+        function updateHeatmap(points) {
+            initHeatmapMap();
+            if (heatLayer) {
+                heatmapMap.removeLayer(heatLayer);
+                heatLayer = null;
+            }
+            if (points.length > 0) {
+                heatLayer = L.heatLayer(points, {
+                    radius: 28,
+                    blur: 18,
+                    maxZoom: 12,
+                    gradient: { 0.2: '#22c55e', 0.5: '#f97316', 0.8: '#ef4444', 1.0: '#7f1d1d' }
+                }).addTo(heatmapMap);
+                const bounds = L.latLngBounds(points.map(p => [p[0], p[1]]));
+                heatmapMap.fitBounds(bounds.pad(0.2));
+            }
+            setTimeout(() => heatmapMap.invalidateSize(), 100);
+        }
+
+        function buildTypeChart(labels, data) {
+            const ctx = document.getElementById('typeChart');
+            if (typeChart) typeChart.destroy();
+            typeChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Complaints',
+                        data,
+                        backgroundColor: labels.map((_, i) => CHART_COLORS[i % CHART_COLORS.length]),
+                        borderRadius: 8,
+                        borderSkipped: false,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { stepSize: 1 } },
+                        x: { ticks: { maxRotation: 45, minRotation: 0, font: { size: 11 } } }
+                    }
+                }
+            });
+        }
+
+        function buildStatusChart(labels, data) {
+            const ctx = document.getElementById('statusChart');
+            if (statusChart) statusChart.destroy();
+            statusChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels,
+                    datasets: [{
+                        data,
+                        backgroundColor: labels.map(s => STATUS_COLORS[s] || '#94a3b8'),
+                        borderWidth: 2,
+                        borderColor: '#fff',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '62%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 12, padding: 14 } }
+                    }
+                }
+            });
+        }
+
+        function animateValue(el, newVal) {
+            if (!el) return;
+            el.classList.add('metric-pulse');
+            el.textContent = newVal;
+            setTimeout(() => el.classList.remove('metric-pulse'), 400);
+        }
+
+        function applyAnalytics(data) {
+            const s = data.stats;
+            animateValue(document.getElementById('stat-total'), s.total);
+            animateValue(document.getElementById('stat-pending'), s.pending);
+            animateValue(document.getElementById('stat-progress'), s.progress);
+            animateValue(document.getElementById('stat-resolved'), s.resolved);
+
+            animateValue(document.getElementById('metric-reports-today'), data.reports_today);
+            animateValue(
+                document.getElementById('metric-avg-resolution'),
+                data.avg_resolution_hours != null ? data.avg_resolution_hours + ' hrs' : 'N/A'
+            );
+            animateValue(document.getElementById('metric-resolution-rate'), data.resolution_rate + '%');
+            animateValue(document.getElementById('metric-field-teams'), data.telemetry.field_teams);
+            animateValue(document.getElementById('metric-response-index'), data.telemetry.response_index + '%');
+
+            document.getElementById('lastUpdated').textContent = 'Updated ' + data.updated_at;
+
+            const typeLabels = data.complaints_by_type.map(t => t.type);
+            const typeCounts = data.complaints_by_type.map(t => t.count);
+            if (typeLabels.length) {
+                buildTypeChart(typeLabels, typeCounts);
+            } else {
+                buildTypeChart(['No data yet'], [0]);
+            }
+
+            const statusLabels = data.status_breakdown.map(s => s.status);
+            const statusCounts = data.status_breakdown.map(s => s.count);
+            if (statusLabels.length) {
+                buildStatusChart(statusLabels, statusCounts);
+            } else {
+                buildStatusChart(['Pending'], [0]);
+            }
+
+            updateHeatmap(data.heatmap);
+        }
+
+        async function refreshAnalytics() {
+            try {
+                const res = await fetch('/api/admin/analytics');
+                if (!res.ok) return;
+                const data = await res.json();
+                applyAnalytics(data);
+            } catch (err) {
+                console.error('Analytics refresh failed:', err);
+            }
+        }
+
+        refreshAnalytics();
+        setInterval(refreshAnalytics, 5000);
+    </script>
+    {% include 'partials/_menu_script.html' %}
+</body>
+</html>

@@ -1,0 +1,30 @@
+<header class="header">
+    <div class="container nav-container">
+        <a href="/" class="logo">Glowcity<span class="dot">.</span></a>
+
+        <nav class="nav-links">
+            <a href="/" {% if request.endpoint == 'home' %}class="active-link"{% endif %}>Home</a>
+            {% if not admin_logged_in %}
+            <a href="{{ url_for('complaint') }}" {% if request.endpoint == 'complaint' %}class="active-link"{% endif %}>Complaint</a>
+            <a href="/#about">About Us</a>
+            <a href="{{ url_for('feedback') }}" {% if request.endpoint == 'feedback' %}class="active-link"{% endif %}>Feedback</a>
+            {% endif %}
+            {% if admin_logged_in %}
+                <a href="{{ url_for('dashboard') }}" {% if request.endpoint == 'dashboard' %}class="active-link"{% endif %}>Dashboard</a>
+                <a href="{{ url_for('admin_logout') }}" class="login-btn">Logout</a>
+            {% elif logged_in %}
+                <a href="{{ url_for('my_complaints') }}" {% if request.endpoint == 'my_complaints' %}class="active-link"{% endif %}>My Complaints</a>
+                <a href="{{ url_for('profile') }}" {% if request.endpoint == 'profile' %}class="active-link"{% endif %}>Settings</a>
+                <a href="{{ url_for('user_logout') }}" class="login-btn">Logout</a>
+            {% else %}
+                <a href="{{ url_for('login') }}" class="login-btn {% if request.endpoint in ('login', 'login_user', 'admin_login') %}active-link{% endif %}">Login</a>
+            {% endif %}
+        </nav>
+
+        <div class="menu-toggle" id="menu-toggle">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+        </div>
+    </div>
+</header>

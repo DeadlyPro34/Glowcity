@@ -1,0 +1,35 @@
+<footer class="footer">
+    <div class="container footer-container">
+        <div class="footer-brand">
+            <a href="/" class="logo">Glowcity<span class="dot">.</span></a>
+            <p>Empowering citizens to monitor and maintain smart infrastructure.</p>
+        </div>
+
+        <div class="footer-links">
+            <h4>Quick Links</h4>
+            <a href="/">Home</a>
+            <a href="/#about">About Us</a>
+            {% if not admin_logged_in %}
+            <a href="{{ url_for('complaint') }}">File Complaint</a>
+            <a href="{{ url_for('feedback') }}">User Feedback</a>
+            {% if logged_in %}
+            <a href="{{ url_for('my_complaints') }}">Track Status</a>
+            {% endif %}
+            {% endif %}
+        </div>
+
+        <div class="footer-contact">
+            <h4>Contact</h4>
+            <p>support@glowcity.com</p>
+            <p>+1 (800) 123-4567</p>
+            <p class="copyright">&copy; 2026 Glowcity Inc.</p>
+        </div>
+
+        <div class="footer-social">
+            <h4>Follow Us</h4>
+            <div class="footer-social-icons">
+                {% include 'partials/_social_icons.html' %}
+            </div>
+        </div>
+    </div>
+</footer>

@@ -1,0 +1,8 @@
+# Optional — local AI photo validation only (install AFTER requirements-render.txt or requirements.txt web deps)
+# pip install -r requirements-ai.txt
+
+torch>=2.11
+transformers>=5.5
+huggingface_hub>=1.9
+numpy>=2.4
+safetensors>=0.7
