@@ -1,6 +1,6 @@
 # Glowcity
 
-**Smart civic complaint platform** — citizens report infrastructure issues (street lights, potholes, broken signals, etc.); city admins review complaints, update status, and view analytics on a live dashboard.
+**AI-powered civic issue reporting platform.** — citizens report infrastructure issues (street lights, potholes, broken signals, etc.); city admins review complaints, update status, and view analytics on a live dashboard.
 
 | | |
 |---|---|
@@ -216,4 +216,4 @@ More detail for reviewers: **[JUDGES.md](JUDGES.md)**.
 
 ## License
 
-Hackathon / academic use — update as required by your team.
+Hackathon / Academic Use
