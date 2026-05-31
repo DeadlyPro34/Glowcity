@@ -210,6 +210,7 @@ More detail for reviewers: **[JUDGES.md](JUDGES.md)**.
 
 - **Demo:** [https://glowcity-uygw.onrender.com](https://glowcity-uygw.onrender.com)
 - **Repo:** [https://github.com/krisha-kalal/Glowcity](https://github.com/krisha-kalal/Glowcity)
+- **Youtube link:** [https://youtu.be/Esrsa0S4zic](https://youtu.be/Esrsa0S4zic)
 - **Judges:** [JUDGES.md](JUDGES.md) (admin login, flows, live vs local features)
 
 ---
