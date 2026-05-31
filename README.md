@@ -2,6 +2,8 @@
 
 Smart civic complaint platform — citizens report infrastructure issues (street lights, potholes, etc.); admins manage status and analytics.
 
+**Hackathon judges:** see **[JUDGES.md](JUDGES.md)** for live demo URL, admin login, local run steps, and feature notes.
+
 ## Project size (why the folder looks huge)
 
 | What | Approx. size |
